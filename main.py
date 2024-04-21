@@ -1,20 +1,21 @@
 import asyncio
 import time
 from selenium import webdriver
-# from telegram import check_tg2
 from app.telegram_ban import check_tg
 from app.megafon import login_lk
 import logging
+from app import config
 
 # Настройка конфигурации логгера
-logging.basicConfig(filename='errors.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='app/errors.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 # Создаем экземпляр опций Chromium
 chrome_options = webdriver.ChromeOptions()
 
 # Указываем путь к исполняемому файлу ChromeDriver
-# chrome_options.binary_location = '/usr/bin/chromium-browser'
+if len(config.path_chrome) > 0:
+    chrome_options.binary_location = config.path_chrome
 
 
 def parsing_megafon(number_password):
@@ -25,38 +26,33 @@ def parsing_megafon(number_password):
     driver = webdriver.Chrome(options=chrome_options)
     if len(number) > 10:
         number = number[-10:]
-    parsing = login_lk(driver=driver, phone=number, password=password)
+    login_lk(driver=driver, phone=number, password=password)
 # Закрываем драйвер с текущими опциями
-    driver.quit()
-    return parsing
+    return
 
 
 async def check_ban(number):
-    with open("app/valid.txt", "w"):
+    with open("valid.txt", "w"):
         pass
     options = webdriver.ChromeOptions()
-    options.add_argument('--incognito')
+
     driver = webdriver.Chrome(options=options)
     list_valid = await check_tg(phones=number, driver=driver)
     return
 
-
-
-
 while True:
+    print()
     print('Разработка Back-end сайта, приложений, скриптов - тг @peoplemyfriends\n',
-         '1 - Получение номеров с Мегафона\n',
+        '1 - Получение номеров с Мегафона\n',
         '2 - Проверка на бан тг из файла all_phones.txt\n',
         '3 - Получение номеров и проверка на бан.')
-
+    print()
 
     counter = int(input())
 
-
-
     try:
         if counter == 1:
-            megafon = input("Введите номер телефона и пароль форматом: НОМЕР:ПАРОЛЬ \n")
+            megafon = input("Введите номер телефона и пароль в формате НОМЕР:ПАРОЛЬ \n")
             parsing_megafon(number_password=megafon)
 
         if counter == 2:
@@ -66,7 +62,12 @@ while True:
                 for i in numbers:
                     test.append(i.strip())
                 numbers = test[:]
+                for i in range(numbers.count("")):
+                    numbers.remove("")
+            print(f"На проверке {len(numbers)} номеров")
+            a = time.time()
             asyncio.run(check_ban(number=numbers))
+            print(f" Время выполнения проверки {int(time.time() - a)} сек.")
 
         if counter == 3:
             megafon = input("Введите номер телефона и пароль форматом: НОМЕР:ПАРОЛЬ \n")
@@ -78,28 +79,13 @@ while True:
                 for i in numbers:
                     test.append(i.strip())
                 numbers = test[:]
-            time.sleep(3)
+                for i in range(numbers.count("")):
+                    numbers.remove("")
+            time.sleep(1)
+            a = time.time()
+            print(f"На проверке {len(numbers)} номеров")
             asyncio.run(check_ban(number=numbers))
+            print(f" Время выполнения проверки {int(time.time() - a)} сек.")
     except Exception as e:
         # Логирование ошибки
         logging.error("An error occurred: %s", str(e), exc_info=True)
-
-
-
-
-
-
-
-
-# async def numcrawler(number):
-#     chrome_options.add_argument("user-data-dir=/home/live/snap/chromium/common/chromium")
-#     chrome_options.add_argument("--profile-directory=Default")
-#     # chrome_options.add_argument("--headless")
-#     # Создаем экземпляр драйвера для Chromium с указанными опциями
-#     driver = webdriver.Chrome(options=chrome_options)
-#     list_valid = await check_tg2(driver=driver, valid_phones=number)
-#     return list_valid
-
-# async def teleraptor(number, proxies):
-#     pass
-# with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:

@@ -4,7 +4,7 @@ from random import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
-
+from app import config
 
 def login_lk(phone, password, driver, ):
     with open("app/all_phones.txt", "w"):
@@ -35,7 +35,7 @@ def login_lk(phone, password, driver, ):
 
     except:
         # Если элемент не найден, выводим сообщение об ошибке
-        print("Что-то пошло не так. Обратись к разработчику.")
+        print("Ошибка на моменте авторизации. Обратись к разработчику")
         return
 
         # Проверка капчи и отсеивание
@@ -58,19 +58,33 @@ def login_lk(phone, password, driver, ):
     # Парсинг
     WebDriverWait(driver, 120).until(ec.url_changes('https://lk.megafon.ru'))
     time.sleep(random_time_seed)
-    #  Отсеиваем появления окна с историями
-    try:
-        WebDriverWait(driver, 15).until(
-            ec.presence_of_element_located((By.CLASS_NAME, "popup")))
-        driver.find_element(By.XPATH, "//button[@data-testid='CookiesAssent-submitButton']").click()
-    except:
-        pass
+    for _ in range(2):
+        #  Отсеиваем появления окна с историями
+        try:
+            # Отсеивание "Мы используем Куки"
+            WebDriverWait(driver, config.captcha_cookie).until(
+                ec.presence_of_element_located((By.CLASS_NAME, "popup")))
+            driver.find_element(By.XPATH, "//button[@data-testid='CookiesAssent-submitButton']").click()
+        except:
+            pass
+        try:
+            # История с Евой
+            WebDriverWait(driver, config.captcha_eva).until(
+                ec.presence_of_element_located(
+                    (By.XPATH, "//div[@class='stories-face slider3d__rotater'][@data-v-05f1b0f5]")))
+            driver.find_element(By.XPATH, "//button[@class='stories-viewer__close'][@data-v-05f1b0f5]").click()
+        except:
+            pass
+
     WebDriverWait(driver, 30).until(
         ec.presence_of_element_located((By.XPATH, "//*[text()='Доп. номер']"))
                                             ).click()
-    WebDriverWait(driver, 30).until(
-        ec.presence_of_element_located((By.CLASS_NAME, "ym-service-shelf-additional-numbers-connection"))
-                                            ).click()
+    try: # Поиск кнопки добавления номера
+        WebDriverWait(driver, 5).until(
+            ec.presence_of_element_located((By.CLASS_NAME, "ym-service-shelf-additional-numbers-connection"))).click()
+    except: # Если на номере уже есть подключенный контакт, мы находим этот элемент
+        driver.find_element(By.CSS_SELECTOR, "[data-testid='MainAdditionalNumbers-addNumberBtn']").click()
+
     WebDriverWait(driver, 30).until(
         ec.presence_of_element_located((By.XPATH, "//*[text()='Продолжить']"))
                                             ).click()
@@ -92,3 +106,8 @@ def login_lk(phone, password, driver, ):
             el = el.replace(' ', '')
             file.write(el + '\n')
         time.sleep(2)
+    driver.delete_all_cookies()
+    print("\n")
+    print(f"Найдено {len(all_phones)} номеров.")
+
+
