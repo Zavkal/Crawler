@@ -1,10 +1,12 @@
 import asyncio
 import time
+
 from selenium import webdriver
-from app.telegram_ban import check_tg
+from app.telegram_ban import check_tg, check_tg2
 from app.megafon import login_lk
 import logging
 from app import config
+from app.teleraptor import main as teleraptor_main
 
 # Настройка конфигурации логгера
 logging.basicConfig(filename='app/errors.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -31,21 +33,28 @@ def parsing_megafon(number_password):
     return
 
 
-async def check_ban(number):
+def check_ban(number):
+    a = time.time()
     with open("valid.txt", "w"):
         pass
     options = webdriver.ChromeOptions()
 
     driver = webdriver.Chrome(options=options)
-    list_valid = await check_tg(phones=number, driver=driver)
+    check_tg(phones=number, driver=driver)
+    b = time.time()
+    print(f" Время выполнения проверки {int(b - a)} сек.")
     return
+
 
 while True:
     print()
     print('Разработка Back-end сайта, приложений, скриптов - тг @peoplemyfriends\n',
         '1 - Получение номеров с Мегафона\n',
         '2 - Проверка на бан тг из файла all_phones.txt\n',
-        '3 - Получение номеров и проверка на бан.')
+        '3 - Получение номеров и проверка на бан.\n',
+        '4 - Проверка на наличие аккаунта.\n',
+        '5 - Проверка на бан с получением номеров из консоли.\n',
+        '6 - Поиск воркера')
     print()
 
     counter = int(input())
@@ -65,9 +74,7 @@ while True:
                 for i in range(numbers.count("")):
                     numbers.remove("")
             print(f"На проверке {len(numbers)} номеров")
-            a = time.time()
-            asyncio.run(check_ban(number=numbers))
-            print(f" Время выполнения проверки {int(time.time() - a)} сек.")
+            check_ban(number=numbers)
 
         if counter == 3:
             megafon = input("Введите номер телефона и пароль форматом: НОМЕР:ПАРОЛЬ \n")
@@ -82,10 +89,37 @@ while True:
                 for i in range(numbers.count("")):
                     numbers.remove("")
             time.sleep(1)
-            a = time.time()
             print(f"На проверке {len(numbers)} номеров")
-            asyncio.run(check_ban(number=numbers))
-            print(f" Время выполнения проверки {int(time.time() - a)} сек.")
+            check_ban(number=numbers)
+
+        if counter == 4:
+            with open("valid1.txt", "w"):
+                pass
+
+            async def run_teleraptor():
+                await teleraptor_main()
+
+            asyncio.run(run_teleraptor())
+
+        if counter == 5:
+            test = list(input().strip().split())
+            print(f"На проверке {len(test)} номеров")
+            check_ban(number=test)
+
+        if counter == 6:
+            test = []
+            with open("valid.txt", "r") as f:
+                numbers = f.readlines()
+                for i in numbers:
+                    test.append(i.strip())
+            options = webdriver.ChromeOptions()
+            options.add_argument("user-data-dir=/home/live/snap/chromium/common/chromium")
+            options.add_argument("--profile-directory=Default")
+            driver = webdriver.Chrome(options=options)
+            check_tg2(valid_phones=test, driver=driver)
+            driver.quit()
+            driver.close()
+
     except Exception as e:
         # Логирование ошибки
         logging.error("An error occurred: %s", str(e), exc_info=True)

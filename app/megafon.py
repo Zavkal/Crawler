@@ -68,11 +68,12 @@ def login_lk(phone, password, driver, ):
         except:
             pass
         try:
+            pass
             # История с Евой
-            WebDriverWait(driver, config.captcha_eva).until(
-                ec.presence_of_element_located(
-                    (By.XPATH, "//div[@class='stories-face slider3d__rotater'][@data-v-05f1b0f5]")))
-            driver.find_element(By.XPATH, "//button[@class='stories-viewer__close'][@data-v-05f1b0f5]").click()
+            # WebDriverWait(driver, config.captcha_eva).until(
+            #     ec.presence_of_element_located(
+            #         (By.XPATH, "//div[@class='stories-face slider3d__rotater'][@data-v-05f1b0f5]")))
+            # driver.find_element(By.XPATH, "//button[@class='stories-viewer__close'][@data-v-05f1b0f5]").click()
         except:
             pass
 
