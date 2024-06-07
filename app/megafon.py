@@ -1,3 +1,4 @@
+import logging
 import time
 from random import random
 
@@ -5,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from app import config
+
 
 def login_lk(phone, password, driver, ):
     with open("app/all_phones.txt", "w"):
@@ -33,8 +35,9 @@ def login_lk(phone, password, driver, ):
         driver.find_element(By.CLASS_NAME, "mfui-button__inner").click()
         time.sleep(random_time_seed + 1)
 
-    except:
+    except Exception as e:
         # Если элемент не найден, выводим сообщение об ошибке
+        logging.error(e)
         print("Ошибка на моменте авторизации. Обратись к разработчику")
         return
 
